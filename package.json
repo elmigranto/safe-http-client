@@ -1,0 +1,25 @@
+{
+  "name": "safe-http-client",
+  "version": "0.0.1",
+  "private": true,
+  "description": "`request` wrapper to protect from SSRF and similar attacks",
+  "main": "index.js",
+  "scripts": {
+    "prepublish": "npm run lint && npm run test",
+    "test": "mocha --bail --inline-diffs --no-exit --throw-deprecation test/test.js",
+    "testw": "npm run test -- --watch",
+    "lint": "eslint src/ test/ index.js"
+  },
+  "keywords": ["ssrf", "safe", "http", "https", "security", "request"],
+  "author": "Alexey Zabrodsky <elmigranto@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "request": "^2.74.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "eslint": "^3.5.0",
+    "mocha": "^3.0.2"
+  }
+}
