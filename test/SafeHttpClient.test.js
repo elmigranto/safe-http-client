@@ -4,10 +4,10 @@ const {expect} = require('chai');
 const SafeHttpClient = require('..');
 const {start, stop, address, payloadLimit} = require('./fixtures');
 
-before(start);
-after(stop);
-
 describe('SafeHttpClient', () => {
+  before(start);
+  after(stop);
+
   const client = new SafeHttpClient({
     payloadLimit
   });
@@ -70,7 +70,9 @@ describe('SafeHttpClient', () => {
     it('fails if URI scheme is not http/https', (done) => {
       request('file:///etc/passwd', (err, res) => {
         expect(err).to.be.instanceof(Error);
-        expect(err.message).to.be.equal('InvalidURI');
+        expect(err.message).to.be.equal('UrlPolicyViolation');
+        expect(err.reason).to.be.instanceof(Error);
+        expect(err.reason.message).to.be.equal('InvalidProtocol');
         expect(res).to.be.undefined;
         done();
       });
@@ -102,6 +104,24 @@ describe('SafeHttpClient', () => {
       request('/too-many-redirects', (err, res) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('TooManyRedirects');
+        expect(res).to.be.undefined;
+        done();
+      });
+    });
+
+    it('fails on redirects to localhost', (done) => {
+      request(`/bad-redirect?where=${encodeURIComponent('//localhost:8080')}`, (err, res) => {
+        expect(err).to.be.instanceof(Error);
+        expect(err.message).to.equal('UrlPolicyViolation');
+        expect(res).to.be.undefined;
+        done();
+      });
+    });
+
+    it('fails on redirects to private IP addresses', (done) => {
+      request(`/bad-redirect?where=${encodeURIComponent('//[::1]')}`, (err, res) => {
+        expect(err).to.be.instanceof(Error);
+        expect(err.message).to.equal('UrlPolicyViolation');
         expect(res).to.be.undefined;
         done();
       });

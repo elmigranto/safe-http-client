@@ -1,7 +1,9 @@
 'use strict';
 
+const {resolve} = require('url');
 const request = require('request');
 const {once, safeCallSync} = require('./utils');
+const UrlPolicy = require('./UrlPolicy');
 
 class SafeHttpClient {
   constructor ({
@@ -15,8 +17,62 @@ class SafeHttpClient {
       ? {uri: optionsOrUrlString}
       : optionsOrUrlString;
 
+    const chunks = [];
+    let chunksSize = 0;
+    let error = null;
+
+    if (opts.url) {
+      opts.uri = opts.url;
+      delete opts.url;
+    }
+
+    if (opts.baseUrl) {
+      opts.uri = resolve(opts.baseUrl, opts.uri);
+      delete opts.baseUrl;
+    }
+
+    const failForUrlPolicyValidation = (err) => {
+      error = SafeHttpClient.Errors._wrapError(err);
+      error.message = SafeHttpClient.Errors.UrlPolicyViolation;
+    };
+
+    const finish = once(() => {
+      const cb = body => callback(error, body);
+
+      if (error)
+        return cb();
+
+      if (chunks.length === 0)
+        return cb();
+
+      return Buffer.isBuffer(chunks[0])
+        ? cb(Buffer.concat(chunks, chunksSize))
+        : cb(chunks.join(''));
+    });
+
+    opts.uri = UrlPolicy.validate(opts.uri);
+
+    if (opts.uri instanceof Error) {
+      failForUrlPolicyValidation(opts.uri);
+      return setImmediate(finish);
+    }
+
     const params = Object.assign(
       SafeHttpClient.defaults(),
+      {
+        followRedirect: (res) => {
+          const redirectTo = res.caseless.has('location') && res.caseless.get('location');
+          const url = resolve(res.request.uri.href, redirectTo);
+          const ret = UrlPolicy.validate(url);
+
+          if (ret instanceof Error) {
+            failForUrlPolicyValidation(ret);
+            return false;
+          }
+
+          return true;
+        }
+      },
       opts
     );
 
@@ -24,10 +80,6 @@ class SafeHttpClient {
 
     if (req instanceof Error)
       return setImmediate(callback, SafeHttpClient.Errors._wrapError(req));
-
-    const chunks = [];
-    let chunksSize = 0;
-    let error = null;
 
     const onError = (err) => {
       error = SafeHttpClient.Errors._wrapError(err);
@@ -44,20 +96,6 @@ class SafeHttpClient {
         req.removeListener('data', onData);
       }
     };
-
-    const finish = once(() => {
-      const cb = body => callback(error, body);
-
-      if (error)
-        return cb();
-
-      if (chunks.length === 0)
-        return cb();
-
-      return Buffer.isBuffer(chunks[0])
-        ? cb(Buffer.concat(chunks, chunksSize))
-        : cb(chunks.join(''));
-    });
 
     req
       .on('error', onError)
@@ -79,13 +117,13 @@ SafeHttpClient.Errors = {
   PayloadTooBig: 'PayloadTooBig',
   TooManyRedirects: 'TooManyRedirects',
   InvalidURI: 'InvalidURI',
+  UrlPolicyViolation: 'UrlPolicyViolation',
 
-  _wrapError (requestError) {
-    const message = this._mapErrorMessage(requestError.message);
+  _wrapError (reason) {
+    const message = this._mapErrorMessage(reason.message);
     const error = new Error(message);
 
-    Error.captureStackTrace(error, this._wrapError);
-    error.reason = requestError;
+    error.reason = reason;
     return error;
   },
 
