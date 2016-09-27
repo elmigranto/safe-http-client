@@ -22,6 +22,8 @@ const server = http.createServer((req, res) => {
   const headers = {'content-type': 'text/plain; charset=UTF-8'};
   let status;
   let reply;
+  let delayHead = 0;
+  let delayEnd = 0;
 
   switch (pathname) {
     case '/fine':
@@ -62,14 +64,32 @@ const server = http.createServer((req, res) => {
       headers['location'] = query.where;
       break;
 
+    case '/delay':
+      status = 200;
+      reply = String(Date.now());
+      delayHead = parseInt(query.millis, 10) || 100;
+      break;
+
+    case '/delay-chunks':
+      status = 200;
+      reply = String(Date.now());
+      delayEnd = parseInt(query.millis, 10) || 100;
+      break;
+
     default:
       status = 404;
       reply = http.STATUS_CODES[status];
       break;
   }
 
-  res.writeHead(status, headers);
-  res.end(reply);
+  setTimeout(() => {
+    res.writeHead(status, headers);
+
+    if (reply)
+      res.write(reply);
+
+    setTimeout(res.end.bind(res), delayEnd);
+  }, delayHead);
 });
 
 module.exports = {

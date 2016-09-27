@@ -107,7 +107,8 @@ class SafeHttpClient {
   static defaults () {
     return {
       method: 'get',
-      gzip: true
+      gzip: true,
+      timeout: 20e3
     };
   }
 }
@@ -118,6 +119,7 @@ SafeHttpClient.Errors = {
   TooManyRedirects: 'TooManyRedirects',
   InvalidURI: 'InvalidURI',
   UrlPolicyViolation: 'UrlPolicyViolation',
+  TimedOut: 'TimedOut',
 
   _wrapError (reason) {
     const message = this._mapErrorMessage(reason.message);
@@ -132,6 +134,8 @@ SafeHttpClient.Errors = {
       return this.TooManyRedirects;
     else if (message.startsWith('Invalid URI'))
       return this.InvalidURI;
+    else if (['ETIMEDOUT', 'ESOCKETTIMEDOUT'].includes(message))
+      return this.TimedOut;
     else
       return this.UknownError;
   }

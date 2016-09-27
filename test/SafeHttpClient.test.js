@@ -16,6 +16,7 @@ describe('SafeHttpClient', () => {
     const options = {
       baseUrl: address,
       encoding: 'utf8',
+      timeout: 100, // millis
       uri
     };
 
@@ -123,6 +124,26 @@ describe('SafeHttpClient', () => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('UrlPolicyViolation');
         expect(res).to.be.undefined;
+        done();
+      });
+    });
+  });
+
+  describe('Timeout', () => {
+    it('fails if server is too slow to start replying', (done) => {
+      request('/delay', (err, res) => {
+        expect(err).to.be.instanceof(Error);
+        expect(err.message).to.equal('TimedOut');
+        expect(err.reason).to.be.instanceof(Error);
+        done();
+      });
+    });
+
+    it('fails if server is "stuck" inbetween chunks', (done) => {
+      request('/delay-chunks', (err, res) => {
+        expect(err).to.be.instanceof(Error);
+        expect(err.message).to.equal('TimedOut');
+        expect(err.reason).to.be.instanceof(Error);
         done();
       });
     });
