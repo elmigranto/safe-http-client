@@ -122,7 +122,10 @@ SafeHttpClient.Errors = {
   TimedOut: 'TimedOut',
 
   _wrapError (reason) {
-    const message = this._mapErrorMessage(reason.message);
+    const message = reason.code === 'HPE_HEADER_OVERFLOW'
+      ? this.PayloadTooBig
+      : this._mapErrorMessage(reason.message);
+
     const error = new Error(message);
 
     error.reason = reason;

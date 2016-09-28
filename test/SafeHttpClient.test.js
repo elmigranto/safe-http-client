@@ -98,6 +98,17 @@ describe('SafeHttpClient', () => {
         done();
       });
     });
+
+    it('fails when Node\'s HTTP parser throwed on headers size over the limit', (done) => {
+      request('/too-big-headers', (err, res) => {
+        expect(err).to.be.instanceof(Error);
+        expect(err.message).to.equal('PayloadTooBig');
+        expect(err.reason).to.be.instanceof(Error);
+        expect(err.reason.code).to.equal('HPE_HEADER_OVERFLOW');
+        expect(res).to.be.undefined;
+        done();
+      });
+    });
   });
 
   describe('Bad redirects', () => {

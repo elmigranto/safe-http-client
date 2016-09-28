@@ -4,6 +4,7 @@ const url = require('url');
 const zlib = require('zlib');
 const http = require('http');
 const assert = require('assert');
+const crypto = require('crypto');
 
 const HOST = process.env.HOST || '127.0.0.1';
 const PORT = parseInt(process.env.PORT, 10) || 1337;
@@ -52,6 +53,13 @@ const server = http.createServer((req, res) => {
       status = 200;
       headers['content-encoding'] = 'deflate';
       reply = BIG_REPLY_DEFLATED;
+      break;
+
+    // Node's HTTP parser has hard limit of about ~80KiB on headers.
+    case '/too-big-headers':
+      status = 200;
+      headers['x-too-big'] = crypto.randomBytes(80e3).toString('hex');
+      reply = 'okay';
       break;
 
     case '/too-many-redirects':
