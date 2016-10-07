@@ -2,14 +2,14 @@
 
 const {expect} = require('chai');
 const SafeHttpClient = require('..');
-const {start, stop, address, payloadLimit} = require('./fixtures');
+const {start, stop, address, payloadLimit} = require('./fixtures/old-stuff');
 
 describe('SafeHttpClient', () => {
   before(start);
   after(stop);
 
   const client = new SafeHttpClient({
-    payloadLimit
+    decodedLimit: payloadLimit
   });
 
   const request = (uri, callback) => {

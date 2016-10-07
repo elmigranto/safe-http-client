@@ -4,12 +4,17 @@ const {resolve} = require('url');
 const request = require('request');
 const {once, safeCallSync} = require('./utils');
 const UrlPolicy = require('./UrlPolicy');
+const Counter = require('./BytesCounter');
 
 class SafeHttpClient {
   constructor ({
-    payloadLimit = Infinity
+    networkLimit = Infinity, // max bytes to read from socket(s)
+    encodedLimit = Infinity, // max bytes for encoded (e.g. deflated data)
+    decodedLimit = Infinity  // max bytes for decoded (e.g. inflated data)
   } = {}) {
-    this.payloadLimit = payloadLimit;
+    this.networkLimit = networkLimit;
+    this.encodedLimit = encodedLimit;
+    this.decodedLimit = decodedLimit;
   }
 
   request (optionsOrUrlString, callback) {
@@ -20,6 +25,8 @@ class SafeHttpClient {
     const chunks = [];
     let chunksSize = 0;
     let error = null;
+    let response;
+    let stats;
 
     if (opts.url) {
       opts.uri = opts.url;
@@ -37,7 +44,7 @@ class SafeHttpClient {
     };
 
     const finish = once(() => {
-      const cb = body => callback(error, body);
+      const cb = body => callback(error, body, response, stats);
 
       if (error)
         return cb();
@@ -86,20 +93,31 @@ class SafeHttpClient {
       finish();
     };
 
-    const onData = (chunk) => {
-      chunks.push(chunk);
-      chunksSize += Buffer.byteLength(chunk);
-
-      if (chunksSize > this.payloadLimit) {
+    const counter = new Counter(req, (reason, bytes) => {
+      const {networkRead, encoded, decoded} = bytes;
+      const die = () => {
         error = new Error(SafeHttpClient.Errors.PayloadTooBig);
+        counter.stop();
         req.abort();
-        req.removeListener('data', onData);
-      }
-    };
+      };
+
+      chunksSize = encoded;
+      stats = bytes;
+
+      if (networkRead > this.networkLimit)
+        return die();
+
+      if (encoded > this.encodedLimit)
+        return die();
+
+      if (decoded > this.decodedLimit)
+        return die();
+    });
 
     req
       .on('error', onError)
-      .on('data', onData)
+      .on('data', chunk => chunks.push(chunk))
+      .on('response', res => response = res)
       .on('end', finish);
   }
 

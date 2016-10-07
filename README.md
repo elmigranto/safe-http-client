@@ -6,7 +6,7 @@
 const SafeHttpClient = require('safe-http-client');
 
 const client = new SafeHttpClient({
-  payloadLimit: 100 * 1024 // 100 KiB
+  decodedLimit: 100 * 1024 // 100 KiB
 });
 
 client.request('http://example.org/terabyte-of-zeroes.gzip', (err, res) => {
@@ -14,6 +14,22 @@ client.request('http://example.org/terabyte-of-zeroes.gzip', (err, res) => {
   // Error: PayloadTooBig
 });
 ```
+
+## List of Options
+
+`SafeHttpClient` constructor accepts a single parameter, `options` object. Following is complete list of things you can specify.
+
+Format is "`name` (`defaultValue`) — description".
+
+### Limits
+
+These are approximate tresholds, and not exact numbers. Exceeding any of those will abort the request and return appropriate error.
+
+- `networkLimit` (`Infinity`) — maximum number bytes to read from sockets;
+- `encodedLimit` (`Infinity`) — maximum size of encoded payload, in bytes (e.g. gzipped);
+- `decodedLimit` (`Infinity`) — maximum size of decoded payload, in bytes (e.g. un-gzipped).
+
+In addition to the above, [Node's HTTP parser](https://github.com/nodejs/http-parser) has a [hard limit](https://github.com/nodejs/http-parser/search?utf8=%E2%9C%93&q=HPE_HEADER_OVERFLOW) on headers size of 80 KiB, exceeding it will result in `PayloadTooBig` error with `reason.code === 'HPE_HEADER_OVERFLOW'`.
 
 ## TODOs, Issues and API Limitations
 
