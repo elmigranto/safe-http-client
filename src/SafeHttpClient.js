@@ -99,6 +99,7 @@ class SafeHttpClient {
         error = new Error(SafeHttpClient.Errors.PayloadTooBig);
         counter.stop();
         req.abort();
+        finish();
       };
 
       chunksSize = encoded;
