@@ -38,7 +38,7 @@ const safeRequest = (restrictions, options, callback) => {
   };
 
   if (validate.uri && (validate.uri(parse(options.uri)) !== true)) {
-    return setImmediate(callback, new Error('InvalidUri'));
+    return setImmediate(callback, new Error(errors.BadUri));
   }
 
   const params = Object.assign(
@@ -52,7 +52,7 @@ const safeRequest = (restrictions, options, callback) => {
         const valid = validate.uri(parse(url));
 
         if (valid !== true)
-          safety.fail(new Error('InvalidUri'));
+          safety.fail(new Error(errors.BadUri));
 
         return valid;
       }

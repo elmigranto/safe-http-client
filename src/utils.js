@@ -1,8 +1,5 @@
 'use strict';
 
-const debug = require('debug');
-const pkg = require('../package.json');
-
 const safeCallSync = (fn, ...args) => {
   try {
     return fn(...args);
@@ -14,7 +11,6 @@ const safeCallSync = (fn, ...args) => {
 
 const utils = {
   noop: () => {},
-  debug: debug(pkg.name),
   safeCallSync,
 
   kb: n => n * (1 << 10),

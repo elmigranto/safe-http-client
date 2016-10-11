@@ -15,7 +15,7 @@ describe('Payload Limits', () => {
       server.endpoint('/network-limit-10kb-header'),
       (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
-        expect(err.message).to.equal('PayloadTooBig');
+        expect(err.message).to.equal('LimitExceeded');
         expect(stats.network).to.be.above(kb(1));
         done();
       }
@@ -28,7 +28,7 @@ describe('Payload Limits', () => {
       server.endpoint('/encoded-limit-10kb-zipped'),
       (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
-        expect(err.message).to.equal('PayloadTooBig');
+        expect(err.message).to.equal('LimitExceeded');
         expect(stats.encoded).to.be.above(10);
         done();
       }
@@ -41,7 +41,7 @@ describe('Payload Limits', () => {
       server.endpoint('/zip-bomb-10mb'),
       (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
-        expect(err.message).to.equal('PayloadTooBig');
+        expect(err.message).to.equal('LimitExceeded');
         expect(stats.decoded).to.be.above(kb(1));
 
         // Let's make sure we are not downloading too much.
@@ -60,7 +60,7 @@ describe('Payload Limits', () => {
       server.endpoint('/redirect-3-times-with-1kb-header'),
       (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
-        expect(err.message).to.equal('PayloadTooBig');
+        expect(err.message).to.equal('LimitExceeded');
         expect(stats.network).to.be.above(kb(3));
         expect(stats.encoded).to.be.below(1);
         done();
@@ -79,7 +79,7 @@ describe('Payload Limits', () => {
       server.endpoint('/zip-bomb-10mb'),
       (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
-        expect(err.message).to.equal('PayloadTooBig');
+        expect(err.message).to.equal('LimitExceeded');
         expect(stats.network).to.be.above(kb(10));
         expect(stats.encoded).to.be.above(kb(9));
         expect(stats.decoded).to.be.below(mb(2));

@@ -50,7 +50,7 @@ class Safety extends EventEmitter {
       return;
 
     if (this.validate.address(addr, family, hostname) !== true)
-      this.fail(new Error('InvalidAddress'));
+      this.fail(new Error(errors.BadAddress));
   }
 
   onResponse (response) {
@@ -66,7 +66,7 @@ class Safety extends EventEmitter {
     this.counter.addBytes(kind, chunk);
 
     if (this.counter[kind] > this.limits[kind]) {
-      const error = new Error(errors.PayloadTooBig);
+      const error = new Error(errors.LimitExceeded);
       return this.fail(error, kind);
     }
   }

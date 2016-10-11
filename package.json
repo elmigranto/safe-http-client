@@ -21,7 +21,6 @@
   "author": "Alexey Zabrodsky <elmigranto@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "debug": "^2.2.0",
     "ip": "^1.1.3",
     "request": "^2.74.0"
   },
