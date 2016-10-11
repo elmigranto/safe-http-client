@@ -1,5 +1,5 @@
 {
-  "name": "safe-http-client",
+  "name": "safe-request",
   "version": "0.0.1",
   "private": true,
   "description": "`request` wrapper to protect from SSRF and similar attacks",

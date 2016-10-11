@@ -17,6 +17,9 @@ const utils = {
   debug: debug(pkg.name),
   safeCallSync,
 
+  kb: n => n * (1 << 10),
+  mb: n => n * (1 << 20),
+
   once (fn) {
     let called = false;
 

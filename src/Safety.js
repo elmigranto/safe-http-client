@@ -41,7 +41,7 @@ class Safety extends EventEmitter {
   onSocket (socket) {
     this.addListener(socket, 'data', this.onSocketData);
 
-    if (this.validate.address)
+    if (this.validate.address instanceof Function)
       this.addListener(socket, 'lookup', this.onSocketLookup, socket);
   }
 
@@ -49,7 +49,7 @@ class Safety extends EventEmitter {
     if (err)
       return;
 
-    if (!this.validate.address(addr, family, hostname))
+    if (this.validate.address(addr, family, hostname) !== true)
       this.fail(new Error('InvalidAddress'));
   }
 

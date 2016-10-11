@@ -11,10 +11,6 @@ const createBuf = (byteLength) => Buffer.alloc(byteLength, '0', 'utf8');
 const createStr = (byteLength) => createBuf(byteLength).toString('utf8');
 const createZip = (byteLength) => zlib.gzipSync(createBuf(byteLength));
 
-const kb = n => n * 1024;
-const mb = n => n * kb(1024);
-const gb = n => n * mb(1024);
-
 module.exports = {
   createServer: (handle) => {
     const server = http.createServer((req, res) => {
@@ -33,7 +29,6 @@ module.exports = {
     };
   },
 
-  kb, mb, gb,
   createBuf,
   createStr,
   createZip

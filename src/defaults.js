@@ -1,15 +1,15 @@
 'use strict';
 
 const {isPrivate, isV4Format, isV6Format} = require('ip');
-const {withDefaults} = require('./utils');
+const {mb, withDefaults} = require('./utils');
 
 const isIp = addr => isV4Format(addr) || isV6Format(addr);
 const isPrivateIp = addr => isIp(addr) && isPrivate(addr);
 
 const defaultRestrictions = {
-  networkLimit: Infinity,
-  encodedLimit: Infinity,
-  decodedLimit: Infinity,
+  networkLimit: mb(1),
+  encodedLimit: mb(1),
+  decodedLimit: mb(1),
 
   checkUri: (uri) => {
     return (uri.protocol === 'http:' || uri.protocol === 'https:')

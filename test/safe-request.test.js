@@ -25,33 +25,33 @@ describe('safeRequest()', () => {
 
   describe('Fine requests', () => {
     it('fetches stuff', (done) => {
-      request('/fine', (err, res) => {
+      request('/fine', (err, res, body) => {
         expect(err).to.be.null;
-        expect(res).to.be.equal('okay');
+        expect(body).to.be.equal('okay');
         done();
       });
     });
 
     it('fetches gzipped stuff', (done) => {
-      request('/fine-gzip', (err, res) => {
+      request('/fine-gzip', (err, res, body) => {
         expect(err).to.be.null;
-        expect(res).to.equal('okay-gzip');
+        expect(body).to.equal('okay-gzip');
         done();
       });
     });
 
     it('fetches deflated stuff', (done) => {
-      request('/fine-deflate', (err, res) => {
+      request('/fine-deflate', (err, res, body) => {
         expect(err).to.be.null;
-        expect(res).to.equal('okay-deflate');
+        expect(body).to.equal('okay-deflate');
         done();
       });
     });
 
     it('succeeds with non-200 status codes', (done) => {
-      request('/does-not-exist', (err, res) => {
+      request('/does-not-exist', (err, res, body) => {
         expect(err).to.be.null;
-        expect(res).to.be.equal('Not Found');
+        expect(body).to.be.equal('Not Found');
         done();
       });
     });
@@ -59,17 +59,17 @@ describe('safeRequest()', () => {
 
   describe('Error handling', () => {
     it('fails if DNS does not resolve', (done) => {
-      request(`http://this-surely-wont-resolve.${Date.now()}`, (err, res) => {
+      request(`http://this-surely-wont-resolve.${Date.now()}`, (err, res, body) => {
         expect(err).to.be.instanceof(Error);
         done();
       });
     });
 
     it('fails if URI scheme is not http/https', (done) => {
-      request('file:///etc/passwd', (err, res) => {
+      request('file:///etc/passwd', (err, res, body) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.be.equal('InvalidUri');
-        expect(res).to.be.undefined;
+        expect(body).to.be.undefined;
         done();
       });
     });
@@ -77,7 +77,7 @@ describe('safeRequest()', () => {
 
   describe('Too big requests', () => {
     it('fails with `PayloadTooBig` message', (done) => {
-      request('/too-big', (err, res) => {
+      request('/too-big', (err, res, body) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
         done();
@@ -85,7 +85,7 @@ describe('safeRequest()', () => {
     });
 
     it('fails when gzipped chunks are fine, but unarchived data is too big', (done) => {
-      request(`${address}/too-big-gzip`, (err, res) => {
+      request(`${address}/too-big-gzip`, (err, res, body) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
         done();
@@ -93,7 +93,7 @@ describe('safeRequest()', () => {
     });
 
     it('fails when Node\'s HTTP parser throwed on headers size over the limit', (done) => {
-      request('/too-big-headers', (err, res) => {
+      request('/too-big-headers', (err, res, body) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
         expect(err.reason).to.be.instanceof(Error);
@@ -105,7 +105,7 @@ describe('safeRequest()', () => {
 
   describe('Bad redirects', () => {
     it('fails on too many redirects', (done) => {
-      request('/too-many-redirects', (err, res) => {
+      request('/too-many-redirects', (err, res, body) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('TooManyRedirects');
         done();
@@ -113,7 +113,7 @@ describe('safeRequest()', () => {
     });
 
     it('fails on redirects to localhost', (done) => {
-      request(`/bad-redirect?where=${encodeURIComponent('//localhost:8080')}`, (err, res) => {
+      request(`/bad-redirect?where=${encodeURIComponent('//localhost:8080')}`, (err, res, body) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('InvalidUri');
         done();
@@ -124,7 +124,7 @@ describe('safeRequest()', () => {
       requestFn(
         {},
         `${address}/bad-redirect?where=${encodeURIComponent('//[::1]')}`,
-        (err, res) => {
+        (err, res, body) => {
           expect(err).to.be.instanceof(Error);
           expect(err.message).to.equal('InvalidAddress');
           done();
@@ -135,7 +135,7 @@ describe('safeRequest()', () => {
 
   describe('Timeout', () => {
     it('fails if server is too slow to start replying', (done) => {
-      request('/delay', (err, res) => {
+      request('/delay', (err, res, body) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('TimedOut');
         expect(err.reason).to.be.instanceof(Error);
@@ -144,7 +144,7 @@ describe('safeRequest()', () => {
     });
 
     it('fails if server is "stuck" inbetween chunks', (done) => {
-      request('/delay-chunks', (err, res) => {
+      request('/delay-chunks', (err, res, body) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('TimedOut');
         expect(err.reason).to.be.instanceof(Error);

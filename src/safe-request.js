@@ -37,7 +37,7 @@ const safeRequest = (restrictions, options, callback) => {
     address: restrictions.checkAddress
   };
 
-  if (validate.uri && !validate.uri(parse(options.uri))) {
+  if (validate.uri && (validate.uri(parse(options.uri)) !== true)) {
     return setImmediate(callback, new Error('InvalidUri'));
   }
 
@@ -51,7 +51,7 @@ const safeRequest = (restrictions, options, callback) => {
         const url = resolve(res.request.uri.href, redirectTo);
         const valid = validate.uri(parse(url));
 
-        if (!valid)
+        if (valid !== true)
           safety.fail(new Error('InvalidUri'));
 
         return valid;
@@ -72,11 +72,11 @@ const safeRequest = (restrictions, options, callback) => {
     const finish = once(callback);
 
     safety.on('success', (body, response, stats) => {
-      finish(null, body, response, stats);
+      finish(null, response, body, stats);
     });
 
     safety.on('error', (error, body, response, stats) => {
-      finish(error, body, response, stats);
+      finish(error, response, body, stats);
     });
   }
 };

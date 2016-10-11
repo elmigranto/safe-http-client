@@ -1,6 +1,7 @@
 'use strict';
 
-const {kb, mb, createStr, createZip, createServer} = require('./common');
+const {kb, mb} = require('../../src/utils');
+const {createStr, createZip, createServer} = require('./common');
 
 const ZIP_BOMB = createZip(mb(10));
 

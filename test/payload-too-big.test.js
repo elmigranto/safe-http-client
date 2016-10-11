@@ -2,7 +2,7 @@
 
 const {expect} = require('chai');
 const server = require('./fixtures/server-limits');
-const {kb, mb} = require('./fixtures/common');
+const {kb, mb} = require('../src/utils');
 const request = require('../');
 
 describe('Payload Limits', () => {
@@ -13,7 +13,7 @@ describe('Payload Limits', () => {
     request(
       {networkLimit: kb(1), checkAddress: false},
       server.endpoint('/network-limit-10kb-header'),
-      (err, body, res, stats) => {
+      (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
         expect(stats.network).to.be.above(kb(1));
@@ -26,7 +26,7 @@ describe('Payload Limits', () => {
     request(
       {encodedLimit: 10, checkAddress: false},
       server.endpoint('/encoded-limit-10kb-zipped'),
-      (err, body, res, stats) => {
+      (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
         expect(stats.encoded).to.be.above(10);
@@ -39,7 +39,7 @@ describe('Payload Limits', () => {
     request(
       {decodedLimit: kb(1), checkAddress: false},
       server.endpoint('/zip-bomb-10mb'),
-      (err, body, res, stats) => {
+      (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
         expect(stats.decoded).to.be.above(kb(1));
@@ -58,7 +58,7 @@ describe('Payload Limits', () => {
     request(
       {networkLimit: kb(3), checkAddress: false},
       server.endpoint('/redirect-3-times-with-1kb-header'),
-      (err, body, res, stats) => {
+      (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
         expect(stats.network).to.be.above(kb(3));
@@ -77,7 +77,7 @@ describe('Payload Limits', () => {
         checkAddress: false
       },
       server.endpoint('/zip-bomb-10mb'),
-      (err, body, res, stats) => {
+      (err, res, body, stats) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
         expect(stats.network).to.be.above(kb(10));
