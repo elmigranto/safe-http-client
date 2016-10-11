@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./src/SafeHttpClient');
+module.exports = require('./src/safe-request');

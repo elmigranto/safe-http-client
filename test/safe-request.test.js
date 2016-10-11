@@ -1,29 +1,26 @@
 'use strict';
 
 const {expect} = require('chai');
-const SafeHttpClient = require('..');
+const requestFn = require('..');
 const {start, stop, address, payloadLimit} = require('./fixtures/old-stuff');
 
-describe('SafeHttpClient', () => {
+describe('safeRequest()', () => {
   before(start);
   after(stop);
 
-  const client = new SafeHttpClient({
-    decodedLimit: payloadLimit
-  });
-
-  const request = (uri, callback) => {
-    const options = {
-      baseUrl: address,
-      encoding: 'utf8',
-      timeout: 100, // millis
-      uri
+  const request = (url, cb) => {
+    const restrictions = {
+      encodedLimit: payloadLimit,
+      checkAddress: (addr, family, hostname) => hostname === process.env.HOST
     };
 
-    if (uri.includes('://'))
-      delete options.baseUrl;
+    const opts = {
+      uri: url.includes('://') ? url : address + url,
+      encoding: 'utf8',
+      timeout: 85
+    };
 
-    client.request(options, callback);
+    requestFn(restrictions, opts, cb);
   };
 
   describe('Fine requests', () => {
@@ -71,9 +68,7 @@ describe('SafeHttpClient', () => {
     it('fails if URI scheme is not http/https', (done) => {
       request('file:///etc/passwd', (err, res) => {
         expect(err).to.be.instanceof(Error);
-        expect(err.message).to.be.equal('UrlPolicyViolation');
-        expect(err.reason).to.be.instanceof(Error);
-        expect(err.reason.message).to.be.equal('InvalidProtocol');
+        expect(err.message).to.be.equal('InvalidUri');
         expect(res).to.be.undefined;
         done();
       });
@@ -85,16 +80,14 @@ describe('SafeHttpClient', () => {
       request('/too-big', (err, res) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
-        expect(res).to.be.undefined;
         done();
       });
     });
 
     it('fails when gzipped chunks are fine, but unarchived data is too big', (done) => {
-      client.request(`${address}/too-big-gzip`, (err, res) => {
+      request(`${address}/too-big-gzip`, (err, res) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('PayloadTooBig');
-        expect(res).to.be.undefined;
         done();
       });
     });
@@ -105,7 +98,6 @@ describe('SafeHttpClient', () => {
         expect(err.message).to.equal('PayloadTooBig');
         expect(err.reason).to.be.instanceof(Error);
         expect(err.reason.code).to.equal('HPE_HEADER_OVERFLOW');
-        expect(res).to.be.undefined;
         done();
       });
     });
@@ -116,7 +108,6 @@ describe('SafeHttpClient', () => {
       request('/too-many-redirects', (err, res) => {
         expect(err).to.be.instanceof(Error);
         expect(err.message).to.equal('TooManyRedirects');
-        expect(res).to.be.undefined;
         done();
       });
     });
@@ -124,19 +115,21 @@ describe('SafeHttpClient', () => {
     it('fails on redirects to localhost', (done) => {
       request(`/bad-redirect?where=${encodeURIComponent('//localhost:8080')}`, (err, res) => {
         expect(err).to.be.instanceof(Error);
-        expect(err.message).to.equal('UrlPolicyViolation');
-        expect(res).to.be.undefined;
+        expect(err.message).to.equal('InvalidUri');
         done();
       });
     });
 
     it('fails on redirects to private IP addresses', (done) => {
-      request(`/bad-redirect?where=${encodeURIComponent('//[::1]')}`, (err, res) => {
-        expect(err).to.be.instanceof(Error);
-        expect(err.message).to.equal('UrlPolicyViolation');
-        expect(res).to.be.undefined;
-        done();
-      });
+      requestFn(
+        {},
+        `${address}/bad-redirect?where=${encodeURIComponent('//[::1]')}`,
+        (err, res) => {
+          expect(err).to.be.instanceof(Error);
+          expect(err.message).to.equal('InvalidAddress');
+          done();
+        }
+      );
     });
   });
 

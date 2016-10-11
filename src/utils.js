@@ -13,6 +13,7 @@ const safeCallSync = (fn, ...args) => {
 };
 
 const utils = {
+  noop: () => {},
   debug: debug(pkg.name),
   safeCallSync,
 
@@ -26,7 +27,13 @@ const utils = {
       fn.call(this, ...args);
       called = true;
     };
-  }
+  },
+
+  withDefaults: defaults => rewrites => Object.assign(
+    {},
+    defaults,
+    rewrites
+  )
 };
 
 module.exports = utils;
